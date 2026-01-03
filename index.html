@@ -3,97 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload to Google Drive</title>
+    <title>Kho Lưu Trữ Drive</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; background: #f0f2f5; }
-        .box {
-            background: white; max-width: 400px; margin: 0 auto;
-            padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h2 { color: #4285F4; margin-top: 0; }
-        input { margin-bottom: 20px; }
-        button {
-            background: #4285F4; color: white; border: none;
-            padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%;
-        }
-        button:hover { background: #3367d6; }
-        button:disabled { background: #ccc; }
-        #status { margin-top: 15px; font-size: 14px; word-wrap: break-word; }
-        a { color: #4285F4; text-decoration: none; font-weight: bold; }
+        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; max-width: 600px; margin: 0 auto; }
+        h2 { text-align: center; color: #333; }
+        
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        input[type="file"] { width: 100%; margin-bottom: 15px; border: 1px dashed #ccc; padding: 20px; text-align: center; border-radius: 5px; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; margin-bottom: 5px; transition: 0.2s; }
+        .btn-upload { background: #4285F4; }
+        .btn-upload:hover { background: #3367d6; }
+        .btn-refresh { background: #0F9D58; }
+        .btn-refresh:hover { background: #0b8043; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #status { text-align: center; margin-bottom: 10px; font-size: 14px; }
+        
+        /* Danh sách file */
+        .file-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
+        .file-info { overflow: hidden; }
+        .file-name { font-weight: bold; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; display: block; }
+        .file-meta { font-size: 12px; color: #777; margin-top: 3px; }
+        
+        .btn-down { background: #eee; color: #333; padding: 5px 15px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        .btn-down:hover { background: #ddd; color: black; }
+
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #4285F4; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 5px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h2>Upload Google Drive</h2>
+    <h2>📁 Hệ Thống Upload Drive</h2>
+
+    <div class="card">
         <input type="file" id="fileInput">
-        <button id="btnUpload" onclick="uploadFile()">Tải lên Drive</button>
         <div id="status"></div>
+        <button class="btn-upload" id="uploadBtn" onclick="handleUpload()">⬆️ Tải Lên Ngay</button>
+    </div>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+            <strong>Danh sách file</strong>
+            <button onclick="loadFiles()" class="btn-refresh" style="width:auto; padding:5px 10px; font-size:12px; margin:0">🔄 Làm mới</button>
+        </div>
+        <div id="fileList">Đang tải danh sách...</div>
     </div>
 
     <script>
-        // --- CẤU HÌNH ---
-        // Dán cái link Web App URL bạn copy từ bước 1 vào đây
+        // === CẤU HÌNH ===
+        // Dán link Web App bạn copy ở Bước 1 vào đây
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCJ3XXDvu6gnt2SJ5Ji9H5cbtUVSHA0JwmvjPn-BZU6vXCUD7_9kj1RhWGY7Ghi8qVaQ/exec";
-        // ----------------
+        // ================
 
-        function uploadFile() {
-            var fileInput = document.getElementById('fileInput');
-            var status = document.getElementById('status');
-            var btn = document.getElementById('btnUpload');
-
-            if (fileInput.files.length === 0) {
+        // 1. Hàm Upload
+        function handleUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const status = document.getElementById('status');
+            const btn = document.getElementById('uploadBtn');
+            
+            if(fileInput.files.length === 0) {
                 alert("Chọn file đi bạn ơi!");
                 return;
             }
-
-            var file = fileInput.files[0];
             
-            // Google Apps Script giới hạn upload khoảng 50MB, nhưng để an toàn thì < 20MB thôi
-            if (file.size > 20 * 1024 * 1024) {
-                alert("File quá lớn! Google Script chỉ chịu được file < 20MB thôi.");
+            const file = fileInput.files[0];
+            if(file.size > 50 * 1024 * 1024) { // Giới hạn 50MB
+                alert("File quá nặng! Google Script chỉ nhận file < 50MB.");
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = "Đang tải lên (Đợi tí)...";
-            status.innerText = "";
+            btn.innerHTML = '<div class="loader"></div> Đang xử lý...';
+            status.innerHTML = "Đang đẩy file lên...";
 
-            var reader = new FileReader();
+            const reader = new FileReader();
             reader.readAsDataURL(file);
-            
-            reader.onload = function(e) {
-                var rawLog = reader.result.split(',')[1]; // Lấy nội dung base64
+            reader.onload = function() {
+                const base64 = reader.result.split(',')[1];
                 
-                var dataObj = {
-                    base64: rawLog,
-                    mimeType: file.type,
-                    filename: file.name
-                };
-
                 fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify(dataObj)
+                    body: JSON.stringify({
+                        base64: base64,
+                        mimeType: file.type,
+                        filename: file.name
+                    })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status === 'success'){
-                        status.innerHTML = `<p style="color:green">✅ Đã lưu vào Drive!</p>
-                                            <p><a href="${data.viewLink}" target="_blank">Xem file tại đây</a></p>`;
+                .then(r => r.json())
+                .then(res => {
+                    if(res.status === "success") {
+                        status.innerHTML = '<span style="color:green">✅ Thành công!</span>';
+                        fileInput.value = ""; // Reset file
+                        loadFiles(); // Tải lại danh sách ngay
                     } else {
-                        status.innerHTML = `<p style="color:red">Lỗi: ${data.message}</p>`;
+                        status.innerHTML = '<span style="color:red">Lỗi: ' + res.message + '</span>';
                     }
                 })
-                .catch(error => {
-                    status.innerHTML = `<p style="color:red">Lỗi mạng hoặc CORS (Nhưng có thể file đã vào Drive rồi, hãy kiểm tra).</p>`;
-                    console.error(error);
+                .catch(err => {
+                    status.innerHTML = '<span style="color:red">Lỗi mạng!</span>';
                 })
                 .finally(() => {
                     btn.disabled = false;
-                    btn.innerText = "Tải lên Drive";
+                    btn.innerHTML = '⬆️ Tải Lên Ngay';
                 });
             };
         }
+
+        // 2. Hàm Lấy danh sách
+        function loadFiles() {
+            const listDiv = document.getElementById('fileList');
+            listDiv.innerHTML = '<div class="loader"></div> Đang tải...';
+            
+            fetch(SCRIPT_URL + "?action=list")
+            .then(r => r.json())
+            .then(files => {
+                if(!files || files.length === 0) {
+                    listDiv.innerHTML = "Chưa có file nào.";
+                    return;
+                }
+                
+                let html = "";
+                files.forEach(f => {
+                    // Chuyển ngày giờ
+                    let date = new Date(f.date).toLocaleDateString('vi-VN');
+                    
+                    html += `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <span class="file-name" title="${f.name}">${f.name}</span>
+                                <div class="file-meta">${f.size} • ${date}</div>
+                            </div>
+                            <a href="${f.link}" class="btn-down">⬇ Tải</a>
+                        </div>
+                    `;
+                });
+                listDiv.innerHTML = html;
+            })
+            .catch(err => {
+                listDiv.innerHTML = "Lỗi tải danh sách.";
+            });
+        }
+
+        // Tự chạy khi vào trang
+        loadFiles();
     </script>
 </body>
 </html>
