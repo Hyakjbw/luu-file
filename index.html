@@ -3,106 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload to GitHub</title>
+    <title>Upload to Google Drive</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; text-align: center; }
-        .container { border: 2px dashed #ccc; padding: 2rem; border-radius: 10px; }
-        input[type="file"] { margin-bottom: 1rem; }
-        button { background: #2ea44f; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #status { margin-top: 1rem; word-break: break-all; }
-        .preview { max-width: 100%; margin-top: 10px; max-height: 200px; }
+        body { font-family: sans-serif; padding: 20px; text-align: center; background: #f0f2f5; }
+        .box {
+            background: white; max-width: 400px; margin: 0 auto;
+            padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h2 { color: #4285F4; margin-top: 0; }
+        input { margin-bottom: 20px; }
+        button {
+            background: #4285F4; color: white; border: none;
+            padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%;
+        }
+        button:hover { background: #3367d6; }
+        button:disabled { background: #ccc; }
+        #status { margin-top: 15px; font-size: 14px; word-wrap: break-word; }
+        a { color: #4285F4; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>Upload Ảnh/Video lên GitHub</h2>
-    
-    <div class="container">
-        <input type="file" id="fileInput" accept="image/*,video/*">
-        <br>
-        <button id="uploadBtn" onclick="uploadFile()">Tải lên ngay</button>
+    <div class="box">
+        <h2>Upload Google Drive</h2>
+        <input type="file" id="fileInput">
+        <button id="btnUpload" onclick="uploadFile()">Tải lên Drive</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // --- CẤU HÌNH (THAY ĐỔI CÁI NÀY) ---
-        // LƯU Ý: Lộ Token ở đây là rất nguy hiểm nếu public ra ngoài!
-        const GITHUB_USERNAME = "Hyakjbw"; 
-        const REPO_NAME = "luu-file"; 
-        const BRANCH = "main"; // Hoặc 'master'
-        const FOLDER_PATH = "uploads"; // Thư mục muốn lưu trên github
-        const ACCESS_TOKEN = "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"; // Token của bạn (Có quyền 'repo')
-        // ------------------------------------
+        // --- CẤU HÌNH ---
+        // Dán cái link Web App URL bạn copy từ bước 1 vào đây
+        const SCRIPT_URL = "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxx/exec";
+        // ----------------
 
-        async function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const statusDiv = document.getElementById('status');
-            const btn = document.getElementById('uploadBtn');
+        function uploadFile() {
+            var fileInput = document.getElementById('fileInput');
+            var status = document.getElementById('status');
+            var btn = document.getElementById('btnUpload');
 
             if (fileInput.files.length === 0) {
-                alert("Vui lòng chọn file!");
+                alert("Chọn file đi bạn ơi!");
                 return;
             }
 
-            const file = fileInput.files[0];
+            var file = fileInput.files[0];
             
-            // Kiểm tra kích thước (GitHub API base64 rất yếu với file lớn)
-            if (file.size > 10 * 1024 * 1024) { // 10MB
-                alert("Chỉ nên upload file dưới 10MB bằng cách này!");
+            // Google Apps Script giới hạn upload khoảng 50MB, nhưng để an toàn thì < 20MB thôi
+            if (file.size > 20 * 1024 * 1024) {
+                alert("File quá lớn! Google Script chỉ chịu được file < 20MB thôi.");
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
-            statusDiv.innerHTML = "Đang đọc file...";
+            btn.innerText = "Đang tải lên (Đợi tí)...";
+            status.innerText = "";
 
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.readAsDataURL(file);
             
-            reader.onload = async function() {
-                const base64Content = reader.result.split(',')[1]; // Lấy phần data sau dấu phẩy
-                const fileName = Date.now() + "_" + file.name; // Đặt tên file theo thời gian để tránh trùng
-                const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FOLDER_PATH}/${fileName}`;
+            reader.onload = function(e) {
+                var rawLog = reader.result.split(',')[1]; // Lấy nội dung base64
+                
+                var dataObj = {
+                    base64: rawLog,
+                    mimeType: file.type,
+                    filename: file.name
+                };
 
-                statusDiv.innerHTML = "Đang đẩy lên GitHub...";
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${ACCESS_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Upload file ${fileName}`,
-                            content: base64Content,
-                            branch: BRANCH
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        // Link xem trực tiếp (Raw)
-                        const rawLink = data.content.download_url;
-                        // Link CDN (Github Pages - có thể delay vài phút mới hiện)
-                        const pageLink = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${FOLDER_PATH}/${fileName}`;
-                        
-                        statusDiv.innerHTML = `
-                            <p style="color:green">✅ Thành công!</p>
-                            <p>Link tải: <a href="${rawLink}" target="_blank">Click để xem</a></p>
-                            ${file.type.startsWith('image') ? `<img src="${rawLink}" class="preview">` : ''}
-                        `;
+                fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(dataObj)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success'){
+                        status.innerHTML = `<p style="color:green">✅ Đã lưu vào Drive!</p>
+                                            <p><a href="${data.viewLink}" target="_blank">Xem file tại đây</a></p>`;
                     } else {
-                        throw new Error(data.message);
+                        status.innerHTML = `<p style="color:red">Lỗi: ${data.message}</p>`;
                     }
-                } catch (error) {
-                    statusDiv.innerHTML = `<p style="color:red">Lỗi: ${error.message}</p>`;
-                } finally {
+                })
+                .catch(error => {
+                    status.innerHTML = `<p style="color:red">Lỗi mạng hoặc CORS (Nhưng có thể file đã vào Drive rồi, hãy kiểm tra).</p>`;
+                    console.error(error);
+                })
+                .finally(() => {
                     btn.disabled = false;
-                    btn.innerText = "Tải lên ngay";
-                }
+                    btn.innerText = "Tải lên Drive";
+                });
             };
         }
     </script>
