@@ -3,631 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KHO MEME BY HUY</title></title>
-    <!-- Fonts & Icons -->
+    <title>KHO MEME - H.HUY</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --primary: #ff0080;
-            --secondary: #7928ca;
-            --accent: #00dfd8;
-            --bg-dark: #0f172a;
-            --glass: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --primary: #ff0055;
+            --secondary: #0000ff;
+            --accent: #00ffcc;
+            --bg-dark: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: radial-gradient(circle at top left, #2a1b3d, #0f172a);
-            background-attachment: fixed;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
             min-height: 100vh;
             color: white;
             padding-bottom: 80px;
-            overflow-x: hidden;
         }
 
-        /* --- BACKGROUND ANIMATION --- */
-        .bg-orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            z-index: -1;
-            opacity: 0.6;
-            animation: float 10s infinite alternate;
-        }
-        .orb-1 { width: 300px; height: 300px; background: var(--primary); top: -50px; left: -50px; }
-        .orb-2 { width: 400px; height: 400px; background: var(--secondary); bottom: -100px; right: -100px; animation-delay: -5s; }
-
-        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 50px); } }
-
-        /* --- NAVIGATION --- */
-        .nav-wrapper {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.6);
+        /* --- NAV --- */
+        .nav-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 999;
+            background: rgba(20, 20, 20, 0.8);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            padding: 8px;
-            border-radius: 50px;
-            display: flex;
-            gap: 5px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            display: flex; gap: 5px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .nav-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: transparent; border: none; color: #888;
+            padding: 10px 25px; border-radius: 100px;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
         }
 
         .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 0, 128, 0.4);
+            background: white; color: black;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
 
-        .nav-btn:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
-
-        /* --- MAIN CONTENT --- */
-        .container {
-            max-width: 1000px;
-            margin: 100px auto 0;
-            padding: 20px;
-        }
-
-        .view-section {
-            display: none;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+        /* --- LAYOUT --- */
+        .container { max-width: 800px; margin: 100px auto 0; padding: 20px; }
+        
+        .view-section { display: none; animation: fadeUp 0.5s ease; }
         .view-section.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        /* --- SINGLE CARD DESIGN --- */
+        /* --- CARD STYLE --- */
         .card {
             background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
             padding: 20px;
             text-align: center;
-            box-shadow: var(--shadow);
-            max-width: 500px;
-            margin: 0 auto;
-            position: relative;
             overflow: hidden;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .card-header h2 { font-size: 1.5rem; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge { background: rgba(0, 223, 216, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; border: 1px solid rgba(0, 223, 216, 0.3); }
-
-        .img-container {
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            min-height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            margin-bottom: 20px;
             position: relative;
-            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .img-container img {
-            max-width: 100%;
-            max-height: 500px;
-            display: block;
-            opacity: 0;
-            transform: scale(0.9);
-            transition: all 0.5s ease;
+        .badge {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 11px; font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .img-container img.loaded { opacity: 1; transform: scale(1); }
+        .img-frame {
+            min-height: 300px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            margin: 40px 0 20px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .img-frame img {
+            max-width: 100%; height: auto;
+            opacity: 0; transition: 0.5s; transform: scale(0.95);
+        }
+        .img-frame img.show { opacity: 1; transform: scale(1); }
 
         /* --- BUTTONS --- */
-        .btn-group { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
-
-        .btn {
-            border: none;
-            padding: 14px 28px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: white;
-            text-decoration: none;
-            flex: 1;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #0072ff);
-            box-shadow: 0 4px 20px rgba(0, 223, 216, 0.3);
-        }
+        .actions { display: flex; gap: 10px; justify-content: center; }
         
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            box-shadow: 0 4px 20px rgba(255, 0, 128, 0.3);
+        .btn {
+            border: none; padding: 15px 30px; border-radius: 15px;
+            font-weight: 700; cursor: pointer; flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.2s; font-size: 15px;
         }
 
-        .btn:active { transform: scale(0.95); }
+        .btn-reload { background: #333; color: white; }
+        .btn-reload:hover { background: #444; }
 
-        /* --- GALLERY GRID --- */
-        .grid-layout {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
+        .btn-dl { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; 
+            box-shadow: 0 5px 20px rgba(255, 0, 85, 0.3);
         }
+        .btn-dl:active { transform: scale(0.95); }
+
+        /* --- GALLERY --- */
+        .grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+        }
+        @media (min-width: 600px) { .grid { grid-template-columns: repeat(4, 1fr); } }
 
         .grid-item {
-            position: relative;
             aspect-ratio: 1;
-            border-radius: 16px;
+            background: #111;
+            border-radius: 15px;
             overflow: hidden;
-            background: rgba(255,255,255,0.05);
+            position: relative;
             cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid transparent;
         }
 
-        .grid-item:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
         
-        .grid-item img {
-            width: 100%; height: 100%; object-fit: cover;
-            transition: 0.3s;
-        }
-
-        .download-hint {
-            position: absolute;
-            inset: 0;
+        .overlay {
+            position: absolute; inset: 0;
             background: rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: 0.3s;
-            backdrop-filter: blur(2px);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            opacity: 0; transition: 0.3s;
         }
-        
-        .grid-item:hover .download-hint { opacity: 1; }
-        .download-hint i { font-size: 24px; margin-bottom: 5px; color: var(--accent); }
-        .download-hint span { font-size: 12px; font-weight: 600; }
+        .grid-item:hover .overlay { opacity: 1; }
 
-        /* --- LOADING SPINNER --- */
+        /* --- LOADER --- */
         .spinner {
-            width: 48px; height: 48px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-bottom-color: var(--accent);
+            width: 40px; height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--accent);
             border-radius: 50%;
-            animation: rotation 1s linear infinite;
+            animation: spin 1s infinite linear;
             position: absolute;
-            z-index: 10;
         }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- TOAST NOTIFICATION --- */
+        .info-txt { font-size: 12px; color: #666; margin-top: 15px; }
+        
+        /* Toast */
         .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--glass-border);
-            padding: 12px 24px;
-            border-radius: 50px;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            opacity: 0;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: max-content;
-            max-width: 90%;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #fff; color: black; padding: 12px 25px;
+            border-radius: 50px; font-weight: 700; opacity: 0; transition: 0.3s;
+            display: flex; align-items: center; gap: 10px; z-index: 1000;
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        .toast i { color: #00dfd8; }
 
-        /* Responsive Fixes */
-        @media (max-width: 480px) {
-            .btn-group { flex-direction: column; }
-            .grid-layout { grid-template-columns: repeat(2, 1fr); }
-            .nav-wrapper { width: 90%; justify-content: space-between; }
-            .nav-btn { padding: 10px 15px; flex: 1; justify-content: center; }
-        }
     </style>
 </head>
 <body>
 
-    <!-- Background Orbs -->
-    <div class="bg-orb orb-1"></div>
-    <div class="bg-orb orb-2"></div>
-
-    <!-- Navigation -->
-    <div class="nav-wrapper">
-        <button class="nav-btn active" onclick="switchView('single')">
-            <i class="fa-solid fa-fire"></i> Mới Nhất
-        </button>
-        <button class="nav-btn" onclick="switchView('gallery')">
-            <i class="fa-solid fa-layer-group"></i> Kho Ảnh
-        </button>
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="switchTab('single')"><i class="fa-solid fa-bolt"></i> Random</button>
+        <button class="nav-btn" onclick="switchTab('list')"><i class="fa-solid fa-grid-2"></i> Gallery</button>
     </div>
 
     <div class="container">
-        <!-- SINGLE VIEW -->
-        <div id="single-view" class="view-section active">
+        <!-- SINGLE TAB -->
+        <div id="single-tab" class="view-section active">
             <div class="card">
-                <div class="card-header">
-                    <h2>Meme Random</h2>
-                    <span class="badge" id="status-badge">DATABASE</span>
-                </div>
+                <span class="badge" id="conn-status">GOOGLE LINKED</span>
                 
-                <div class="img-container" id="img-frame">
-                    <div class="spinner" id="loading-spinner"></div>
-                    <img id="main-image" referrerpolicy="no-referrer" alt="Meme Image" onerror="handleImgError()">
+                <h2 style="font-size: 1.5rem;">Meme Hub V5</h2>
+                <div class="img-frame">
+                    <div class="spinner" id="single-spinner"></div>
+                    <img id="single-img" alt="Meme">
                 </div>
 
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="fetchNewMeme()">
-                        <i class="fa-solid fa-arrows-rotate"></i> Ảnh Khác
+                <div class="actions">
+                    <button class="btn btn-reload" onclick="loadSingleMeme()">
+                        <i class="fa-solid fa-rotate"></i> Đổi Ảnh
                     </button>
-                    <!-- Nút này lấy từ Database -->
-                    <button class="btn btn-secondary" onclick="handleSmartDownload()" id="dl-btn">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> Tải / Lưu
+                    <button class="btn btn-dl" onclick="downloadCurrent()">
+                        <i class="fa-solid fa-download"></i> Tải Về
                     </button>
                 </div>
-                <p id="info-text" style="margin-top: 15px; font-size: 12px; opacity: 0.6; color: #cbd5e1;">
-                    <i class="fa-solid fa-database"></i> Đã cache ảnh vào Database trình duyệt
-                </p>
+                <p class="info-txt"><i class="fa-brands fa-google-drive"></i> Ảnh được xử lý qua Google Server để đảm bảo tải thành công.</p>
             </div>
         </div>
 
-        <!-- GALLERY VIEW -->
-        <div id="gallery-view" class="view-section">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center;">
-                <h3 style="font-size: 1.2rem;">Khám Phá</h3>
-                <button onclick="loadGallery()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-weight:700;">
-                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+        <!-- LIST TAB -->
+        <div id="list-tab" class="view-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Kho Ảnh (Max 20)</h3>
+                <button onclick="reloadGallery()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-weight:bold;">
+                    <i class="fa-solid fa-trash"></i> Làm mới
                 </button>
             </div>
-            
-            <div class="grid-layout" id="gallery-grid">
-                <!-- Items generated by JS -->
-            </div>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn btn-primary" style="display: inline-flex; width: auto; padding: 10px 40px;" onclick="appendGallery(8)">
-                    Xem thêm
-                </button>
-            </div>
+            <div class="grid" id="gallery-grid"></div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <i class="fa-solid fa-circle-check"></i>
-        <span id="toast-msg">Đã lưu ảnh thành công!</span>
-    </div>
+    <div id="toast" class="toast"><i class="fa-solid fa-check-circle" style="color:green"></i> <span>Đã lưu!</span></div>
 
     <script>
-        // --- CẤU HÌNH DATABASE (INDEXEDDB) ---
-        const DB_NAME = "MemeHubDB";
-        const DB_STORE = "images";
-        let dbInstance = null;
-
-        const request = indexedDB.open(DB_NAME, 1);
+        /* ===== CẤU HÌNH SERVER =====
+           Bước 1: Tạo Google Apps Script theo hướng dẫn.
+           Bước 2: Dán URL script của bạn vào biến bên dưới.
+           Nếu chưa có, mình dùng tạm server public (CodeTabs) để bạn test trước.
+        */
         
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(DB_STORE)) {
-                db.createObjectStore(DB_STORE, { keyPath: "id" });
-            }
-        };
+        // Thay link này bằng link Google Script của bạn để ổn định nhất
+        // Ví dụ: const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/XXXXX/exec";
+        let GOOGLE_SCRIPT_URL = ""; 
 
-        request.onsuccess = (event) => {
-            dbInstance = event.target.result;
-            console.log("Database Ready!");
-            fetchNewMeme(); 
-        };
+        // Server dự phòng (Public Proxy) nếu bạn chưa setup Google Script
+        const PUBLIC_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
 
-        request.onerror = (event) => {
-            console.error("Database Error:", event.target.error);
-            showToast("Lỗi DB. Sử dụng chế độ trực tiếp", true);
-        };
-
-        // --- CÁC HÀM XỬ LÝ DATABASE ---
-
-        function saveToDB(id, blob) {
-            if (!dbInstance) return;
-            const transaction = dbInstance.transaction([DB_STORE], "readwrite");
-            const store = transaction.objectStore(DB_STORE);
-            store.put({ id: id, blob: blob, timestamp: Date.now() });
-        }
-
-        function getFromDB(id, callback) {
-            if (!dbInstance) { callback(null); return; }
-            const transaction = dbInstance.transaction([DB_STORE], "readonly");
-            const store = transaction.objectStore(DB_STORE);
-            const request = store.get(id);
-            request.onsuccess = () => {
-                if (request.result) callback(request.result.blob);
-                else callback(null);
-            };
-            request.onerror = () => callback(null);
-        }
-
-        // --- LOGIC TẢI ẢNH MỚI ---
-
-        const API_URL = "https://api.phimtat.vn/api/random-meme/";
-        // Sử dụng Proxy mạnh hơn Corsproxy.io
-        const PROXY_URL = "https://corsproxy.io/?"; 
+        const MEME_API = "https://api.phimtat.vn/api/random-meme/";
         
+        // Biến lưu dữ liệu ảnh hiện tại (Base64)
+        let currentBase64 = null;
         let isFetching = false;
-        let isDirectMode = false; // Chế độ dự phòng khi Proxy lỗi
 
-        async function fetchNewMeme() {
+        // --- HÀM 1: GỌI QUA "SERVER TRUNG GIAN" (QUAN TRỌNG NHẤT) ---
+        async function fetchImageViaProxy(targetUrl) {
+            try {
+                // Ưu tiên dùng Google Script nếu có, nếu không dùng Public Proxy
+                let finalUrl;
+                if (GOOGLE_SCRIPT_URL) {
+                    finalUrl = `${GOOGLE_SCRIPT_URL}?url=${encodeURIComponent(targetUrl)}`;
+                } else {
+                    finalUrl = `${PUBLIC_PROXY}${encodeURIComponent(targetUrl)}`;
+                }
+
+                const response = await fetch(finalUrl);
+                
+                // Nếu dùng Google Script của tôi cung cấp, nó trả về JSON
+                if (GOOGLE_SCRIPT_URL) {
+                    const json = await response.json();
+                    if (json.status === 'success') return json.data; // Trả về chuỗi Base64
+                } 
+                
+                // Nếu dùng Public Proxy, nó trả về Blob trực tiếp
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+
+            } catch (e) {
+                console.error("Proxy Error:", e);
+                return null;
+            }
+        }
+
+        // --- SINGLE VIEW LOGIC ---
+        async function loadSingleMeme() {
             if (isFetching) return;
             isFetching = true;
 
-            const img = document.getElementById('main-image');
-            const spinner = document.getElementById('loading-spinner');
-            const badge = document.getElementById('status-badge');
-            const info = document.getElementById('info-text');
+            const img = document.getElementById('single-img');
+            const spinner = document.getElementById('single-spinner');
             
-            // Reset UI
-            img.classList.remove('loaded');
-            img.style.opacity = 0;
+            img.classList.remove('show');
             spinner.style.display = 'block';
+            currentBase64 = null;
+
+            // Tạo link random
+            const randomUrl = MEME_API + "?id=" + Math.random();
+
+            // Gọi qua Server trung gian
+            const base64Data = await fetchImageViaProxy(randomUrl);
+
+            spinner.style.display = 'none';
             
-            // Random ID để tránh cache
-            const randomId = Math.floor(Math.random() * 1000000);
-            const targetUrl = API_URL + "?id=" + randomId;
-
-            try {
-                // TIMEOUT: Nếu Proxy load quá 5 giây thì hủy luôn
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                // Thử tải qua Proxy để lấy Blob
-                const response = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error("Proxy Error");
-
-                const blob = await response.blob();
-                
-                // --- THÀNH CÔNG: LƯU DB ---
-                saveToDB("current_meme", blob);
-                
-                const objectURL = URL.createObjectURL(blob);
+            if (base64Data) {
+                currentBase64 = base64Data; // Lưu vào biến để tải
+                img.src = base64Data;
                 img.onload = () => {
-                    spinner.style.display = 'none';
-                    img.classList.add('loaded');
-                    img.style.opacity = 1;
+                    img.classList.add('show');
                     isFetching = false;
                 };
-                img.src = objectURL;
-
-                // Cập nhật trạng thái
-                isDirectMode = false;
-                badge.innerText = "DATABASE";
-                badge.style.color = "var(--accent)";
-                info.innerHTML = `<i class="fa-solid fa-database"></i> Đã cache ảnh vào Database`;
-
-            } catch (error) {
-                // --- THẤT BẠI: CHUYỂN SANG CHẾ ĐỘ TRỰC TIẾP ---
-                console.warn("Chuyển sang Direct Mode:", error);
-                
-                isDirectMode = true;
-                isFetching = false;
-                spinner.style.display = 'none';
-                
-                // Load trực tiếp từ URL (Bỏ qua Database)
-                img.src = targetUrl;
-                img.classList.add('loaded');
-                img.style.opacity = 1;
-
-                // Cập nhật trạng thái
-                badge.innerText = "DIRECT";
-                badge.style.color = "#ffbd2e"; // Màu vàng cảnh báo
-                info.innerHTML = `<i class="fa-solid fa-globe"></i> Chế độ trực tiếp (Server bận)`;
-            }
-        }
-
-        // --- XỬ LÝ NÚT TẢI THÔNG MINH ---
-
-        function handleSmartDownload() {
-            if (isDirectMode) {
-                // Nếu đang ở chế độ Direct (không có Blob trong DB) -> Mở Tab mới
-                const img = document.getElementById('main-image');
-                showToast("Đang mở ảnh gốc...", false);
-                window.open(img.src, '_blank');
             } else {
-                // Nếu có Blob trong DB -> Tải xịn
-                downloadFromDB();
+                // Fallback nếu server lỗi
+                img.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDNqMGFxODZ4bmJxeXljdmN4YnZ4bmJxeXljdmN4YnZ4bmJxeXljdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif";
+                img.classList.add('show');
+                isFetching = false;
+                showToast("Server bận, thử lại sau!");
             }
         }
 
-        function downloadFromDB() {
-            getFromDB("current_meme", (blob) => {
-                if (blob) {
-                    processDownload(blob);
-                } else {
-                    // Fallback nếu DB lỗi
-                    showToast("Dữ liệu lỗi, mở tab mới...", true);
-                    window.open(document.getElementById('main-image').src, '_blank');
-                }
-            });
+        function downloadCurrent() {
+            if (!currentBase64) {
+                showToast("Đang tải ảnh..."); 
+                return;
+            }
+            saveBase64AsFile(currentBase64);
         }
 
-        async function processDownload(blob) {
-            const fileName = `meme-${Date.now()}.jpg`;
-            const file = new File([blob], fileName, { type: blob.type });
+        // --- GALLERY LOGIC ---
+        async function reloadGallery() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = '';
+            
+            // Giới hạn 20 ảnh như yêu cầu
+            for (let i = 0; i < 20; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                item.innerHTML = `<div class="spinner" style="position:relative; margin:auto; top:40%;"></div>`;
+                grid.appendChild(item);
+                
+                // Load song song
+                processGalleryItem(item);
+            }
+        }
+
+        async function processGalleryItem(container) {
+            const randomUrl = MEME_API + "?id=" + Math.random().toString(36);
+            const base64 = await fetchImageViaProxy(randomUrl);
+
+            if (base64) {
+                container.innerHTML = `
+                    <img src="${base64}" loading="lazy">
+                    <div class="overlay">
+                        <i class="fa-solid fa-download" style="font-size:24px; color:var(--accent)"></i>
+                        <span style="font-size:12px; font-weight:bold; margin-top:5px">LƯU</span>
+                    </div>
+                `;
+                // Click là tải luôn file Base64 đó
+                container.onclick = () => saveBase64AsFile(base64);
+            } else {
+                container.remove(); // Xóa nếu lỗi
+            }
+        }
+
+        // --- HÀM TẢI FILE TỪ BASE64 (CORE) ---
+        async function saveBase64AsFile(base64) {
+            const fetchRes = await fetch(base64);
+            const blob = await fetchRes.blob();
+            const file = new File([blob], `meme-${Date.now()}.jpg`, { type: "image/jpeg" });
 
             if (navigator.share && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
                         files: [file],
                         title: 'Meme Hub',
-                        text: 'Meme cực chất!'
+                        text: 'Tải từ Google Server'
                     });
-                } catch (err) {}
+                } catch (e) {}
             } else {
-                directDownload(blob, fileName);
-            }
-        }
-
-        function directDownload(blob, fileName) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
+                const a = document.createElement('a');
+                a.href = base64;
+                a.download = `meme-${Date.now()}.jpg`;
+                document.body.appendChild(a);
+                a.click();
                 document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                showToast("Đã lưu vào máy!");
-            }, 100);
-        }
-
-        function handleImgError() {
-            const img = document.getElementById('main-image');
-            // Ảnh lỗi cuối cùng khi cả direct cũng chết
-            img.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDNqMGFxODZ4bmJxeXljdmN4YnZ4bmJxeXljdmN4YnZ4bmJxeXljdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif"; 
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('main-image').classList.add('loaded');
-            document.getElementById('main-image').style.opacity = 1;
-            showToast("Server mất kết nối hoàn toàn.", true);
-        }
-
-        // --- GALLERY LOGIC (Cũng có fallback) ---
-
-        async function appendGallery(count = 8) {
-            const grid = document.getElementById('gallery-grid');
-            
-            for(let i=0; i<count; i++) {
-                const item = document.createElement('div');
-                item.className = 'grid-item';
-                item.innerHTML = `<div class="spinner" style="position:relative; margin:auto; top:40%;"></div>`;
-                grid.appendChild(item);
-                
-                fetchGalleryItem(item);
+                showToast("Đã tải xuống máy!");
             }
         }
 
-        async function fetchGalleryItem(container) {
-            const randomId = Math.random().toString(36).substring(7);
-            const apiUrl = API_URL + "?id=" + Math.random();
-
-            try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), 4000); // 4s timeout
-
-                const res = await fetch(PROXY_URL + encodeURIComponent(apiUrl), { signal: controller.signal });
-                clearTimeout(id);
-
-                if(!res.ok) throw new Error();
-                
-                const blob = await res.blob();
-                saveToDB(randomId, blob);
-                const url = URL.createObjectURL(blob);
-                
-                container.innerHTML = `
-                    <img src="${url}" loading="lazy" alt="Meme">
-                    <div class="download-hint"><i class="fa-solid fa-download"></i><span>Lưu</span></div>
-                `;
-                
-                container.onclick = () => {
-                    getFromDB(randomId, (savedBlob) => {
-                        if(savedBlob) processDownload(savedBlob);
-                    });
-                };
-
-            } catch (e) {
-                // Fallback Gallery: Load trực tiếp (Ấn vào mở tab mới)
-                container.innerHTML = `
-                    <img src="${apiUrl}" loading="lazy" alt="Meme">
-                    <div class="download-hint"><i class="fa-solid fa-external-link-alt"></i><span>Mở</span></div>
-                `;
-                container.onclick = () => window.open(apiUrl, '_blank');
-            }
-        }
-
-        function loadGallery() {
-            document.getElementById('gallery-grid').innerHTML = '';
-            appendGallery(12);
-        }
-
-        // --- UI UTILS ---
-
-        function switchView(viewName) {
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+        // --- UI ---
+        function switchTab(tab) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
             
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            
-            if (viewName === 'single') {
-                document.getElementById('single-view').classList.add('active');
+            if(tab === 'single') {
+                document.getElementById('single-tab').classList.add('active');
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
             } else {
-                document.getElementById('gallery-view').classList.add('active');
-                if (document.getElementById('gallery-grid').children.length === 0) loadGallery();
+                document.getElementById('list-tab').classList.add('active');
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                if(document.getElementById('gallery-grid').children.length === 0) reloadGallery();
             }
         }
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-msg');
-            const icon = toast.querySelector('i');
-
-            toastMsg.innerText = msg;
-            icon.className = isError ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-check";
-            icon.style.color = isError ? "#ff4757" : "#00dfd8";
-
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.querySelector('span').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
+
+        // Init
+        loadSingleMeme();
 
     </script>
 </body>
 </html>
-
-
