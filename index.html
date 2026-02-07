@@ -3,46 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme Kho Ảnh Tổng Hợp</title>
+    <title>Meme Generator V2</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root {
-            --primary: #00f260;
-            --secondary: #0575E6;
+            --primary: #ff0099;
+            --secondary: #493240;
             --bg-dark: #0f0c29;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
 
         body {
-            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to bottom, #24243e, #0f0c29);
             color: white;
             min-height: 100vh;
             padding: 20px;
-        }
-
-        header {
             text-align: center;
-            padding: 40px 0;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             background: linear-gradient(to right, #00f260, #0575E6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin: 30px 0 10px;
             font-weight: 800;
         }
 
-        .control-panel {
+        .subtitle { margin-bottom: 30px; opacity: 0.7; font-size: 0.9rem; }
+
+        .btn-group {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 40px;
+            gap: 15px;
             flex-wrap: wrap;
+            margin-bottom: 30px;
         }
 
         button {
@@ -52,246 +50,175 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.2s;
         }
 
-        .btn-gen {
-            background: linear-gradient(45deg, #ff0099, #493240);
-            box-shadow: 0 4px 15px rgba(255, 0, 153, 0.4);
-        }
+        .btn-load { background: linear-gradient(45deg, #ff0099, #493240); }
+        .btn-clear { background: linear-gradient(45deg, #00f260, #0575E6); }
 
-        .btn-refresh {
-            background: linear-gradient(45deg, #00f260, #0575E6);
-            box-shadow: 0 4px 15px rgba(5, 117, 230, 0.4);
-        }
-
-        button:hover { transform: translateY(-3px); filter: brightness(1.2); }
         button:active { transform: scale(0.95); }
 
-        /* --- GRID 100 ẢNH --- */
-        .gallery-container {
-            max-width: 1400px;
+        /* Khung hiển thị lỗi nếu có */
+        #debug-log {
+            color: #ff4444;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 5px;
+            border-radius: 5px;
+            display: none; /* Ẩn mặc định */
+        }
+
+        .status { margin-bottom: 20px; font-weight: bold; color: #ccc; }
+
+        /* Grid ảnh */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        .status-bar {
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            opacity: 0.8;
-            text-align: center;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
         .meme-item {
-            position: relative;
             aspect-ratio: 1/1;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
+            background: #222;
+            border-radius: 10px;
             overflow: hidden;
+            position: relative;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: 0.3s;
         }
 
-        .meme-item:hover {
-            transform: scale(1.03);
-            border-color: var(--primary);
-            z-index: 10;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
+        .meme-item img { width: 100%; height: 100%; object-fit: cover; }
 
-        .meme-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* Nút tải trên từng ảnh */
-        .download-overlay {
+        .download-btn {
             position: absolute;
-            bottom: 0; left: 0; right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        .meme-item:hover .download-overlay { opacity: 1; }
-
-        .mini-btn {
+            bottom: 5px; right: 5px;
             background: white;
             color: black;
-            width: 35px; height: 35px;
+            width: 30px; height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            border: none;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .mini-btn:hover { background: var(--primary); color: white; }
-
-        /* Loading Spinner */
-        .loader-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid #fff;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s infinite linear;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>MEME GENERATOR</h1>
-        <p>Nguồn API: phimtat.vn</p>
-    </header>
+    <h1>MEME GENERATOR</h1>
+    <p class="subtitle">Nguồn: phimtat.vn (Qua Proxy)</p>
 
-    <div class="control-panel">
-        <button class="btn-gen" onclick="fetch100Memes()">
-            <i class="fa-solid fa-bolt"></i> Lấy 100 Ảnh Mới
+    <div class="btn-group">
+        <button class="btn-load" onclick="startLoading()">
+            <i class="fa-solid fa-bolt"></i> Lấy 100 Ảnh
         </button>
-        <button class="btn-refresh" onclick="clearAndFetch()">
-            <i class="fa-solid fa-rotate-right"></i> Xóa & Làm Lại
+        <button class="btn-clear" onclick="resetGrid()">
+            <i class="fa-solid fa-rotate-right"></i> Xóa Hết
         </button>
     </div>
 
-    <div class="gallery-container">
-        <div class="status-bar" id="status">Đang chờ lệnh...</div>
-        <div class="grid" id="grid">
-            </div>
-    </div>
+    <div id="debug-log"></div>
+    <div class="status" id="status">Sẵn sàng! Bấm nút để tải.</div>
 
-    <div class="loader-overlay" id="loader">
-        <div class="spinner"></div>
-        <h3 id="loading-text">Đang triệu hồi meme...</h3>
-    </div>
+    <div class="grid" id="grid"></div>
 
     <script>
-        // --- CẤU HÌNH ---
-        // Link API chính xác từ ảnh của bạn
-        const API_URL = "https://api.phimtat.vn/api/random-meme/";
+        // --- CẤU HÌNH QUAN TRỌNG ---
+        // Chúng ta dùng "corsproxy.io" để vượt qua tường lửa của trình duyệt
+        const PROXY_URL = "https://corsproxy.io/?"; 
+        const TARGET_API = "https://api.phimtat.vn/api/random-meme/";
         
-        const grid = document.getElementById('grid');
-        const status = document.getElementById('status');
-        const loader = document.getElementById('loader');
-        const loadingText = document.getElementById('loading-text');
+        const statusEl = document.getElementById('status');
+        const gridEl = document.getElementById('grid');
+        const debugEl = document.getElementById('debug-log');
+        let successCount = 0;
 
-        // Hàm chính: Lấy 100 ảnh
-        async function fetch100Memes() {
-            showLoader(true);
-            let successCount = 0;
-            const total = 100;
-            const promises = [];
-
-            // Tạo 100 request chạy song song
-            for (let i = 0; i < total; i++) {
-                // MẸO QUAN TRỌNG: Thêm ?t=... để tránh trình duyệt cache lại ảnh cũ
-                // Giúp mỗi lần gọi là 1 ảnh khác nhau
-                const uniqueUrl = `${API_URL}?t=${Date.now()}_${Math.random()}`;
-                
-                promises.push(
-                    fetch(uniqueUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                            // Xử lý dữ liệu trả về từ phimtat.vn
-                            // Nếu API trả về { "url": "..." } hoặc { "data": "..." }
-                            // Bạn cần mở Console để xem nếu nó không chạy
-                            // Ở đây tôi giả định key phổ biến là 'url' hoặc 'image'
-                            const imgUrl = data.url || data.image || data.link || data.data; 
-                            
-                            if (imgUrl) {
-                                createMemeCard(imgUrl);
-                                successCount++;
-                            }
-                        })
-                        .catch(err => console.log("Lỗi tải ảnh lẻ:", err))
-                );
-            }
-
-            // Đợi tất cả 100 request hoàn tất (hoặc lỗi)
-            await Promise.all(promises);
-
-            status.innerText = `Đã tải xong ${successCount} meme.`;
-            showLoader(false);
+        function logError(msg) {
+            debugEl.style.display = 'block';
+            debugEl.innerHTML += msg + "<br>";
         }
 
-        // Tạo thẻ HTML cho từng ảnh
-        function createMemeCard(url) {
+        async function startLoading() {
+            statusEl.innerText = "Đang kết nối server...";
+            debugEl.innerHTML = ""; // Xóa log cũ
+            successCount = 0;
+            
+            // Tạo mảng 100 request
+            const promises = [];
+            for (let i = 0; i < 100; i++) {
+                promises.push(fetchMeme(i));
+            }
+
+            // Đợi tất cả chạy xong
+            await Promise.all(promises);
+            
+            if (successCount === 0) {
+                statusEl.innerText = "Thất bại toàn tập. Xem lỗi bên trên.";
+                logError("Gợi ý: Server phimtat.vn có thể đang chặn Proxy. Hãy thử lại sau.");
+            } else {
+                statusEl.innerText = `Hoàn tất! Tải được ${successCount} ảnh.`;
+            }
+        }
+
+        async function fetchMeme(index) {
+            try {
+                // Thêm tham số random thời gian để tránh bị trùng ảnh
+                const randomParam = `?t=${Date.now()}_${Math.random()}`;
+                const fullUrl = PROXY_URL + encodeURIComponent(TARGET_API + randomParam);
+
+                const response = await fetch(fullUrl);
+                
+                if (!response.ok) throw new Error("Lỗi mạng");
+
+                const data = await response.json();
+                
+                // Kiểm tra xem server trả về link ở đâu
+                // Thường là data.url, data.image, hoặc data.data
+                let imgUrl = data.url || data.image || data.data || data.link;
+
+                // Trường hợp đặc biệt: API trả về link ảnh trực tiếp dạng text
+                if (!imgUrl && typeof data === 'string' && data.startsWith('http')) {
+                    imgUrl = data;
+                }
+
+                if (imgUrl) {
+                    createCard(imgUrl);
+                    successCount++;
+                    statusEl.innerText = `Đang tải... (${successCount}/100)`;
+                } else {
+                    // Nếu không tìm thấy link ảnh trong cục data trả về
+                    console.log("Dữ liệu lạ:", data); 
+                }
+
+            } catch (error) {
+                console.error("Lỗi:", error);
+                // Không log lỗi ra màn hình quá nhiều để tránh rối
+            }
+        }
+
+        function createCard(url) {
             const div = document.createElement('div');
             div.className = 'meme-item';
             div.innerHTML = `
                 <img src="${url}" loading="lazy" alt="Meme">
-                <div class="download-overlay">
-                    <button class="mini-btn" title="Tải ảnh này" onclick="downloadImage('${url}')">
-                        <i class="fa-solid fa-download"></i>
-                    </button>
-                </div>
+                <a href="${url}" target="_blank" class="download-btn">
+                    <i class="fa-solid fa-download"></i>
+                </a>
             `;
-            // Click vào ảnh để xem to (nếu muốn mở tab mới)
-            div.querySelector('img').onclick = () => window.open(url, '_blank');
-            grid.appendChild(div);
+            gridEl.appendChild(div);
         }
 
-        // Hàm xóa hết và tải lại
-        function clearAndFetch() {
-            grid.innerHTML = '';
-            status.innerText = "Đang làm mới...";
-            fetch100Memes();
+        function resetGrid() {
+            gridEl.innerHTML = '';
+            statusEl.innerText = "Đã xóa sạch.";
+            successCount = 0;
+            debugEl.style.display = 'none';
         }
-
-        // Hàm tải ảnh về máy
-        async function downloadImage(url) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
-                
-                const link = document.createElement('a');
-                link.href = objectUrl;
-                link.download = 'meme_phimtat_' + Math.floor(Math.random() * 10000) + '.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(objectUrl);
-            } catch (e) {
-                // Fallback nếu bị chặn CORS
-                window.open(url, '_blank');
-            }
-        }
-
-        function showLoader(show) {
-            loader.style.display = show ? 'flex' : 'none';
-        }
-        
-        // Tự động tải lần đầu khi vào web
-        // fetch100Memes(); // Bỏ comment dòng này nếu muốn vào web là tải luôn
     </script>
 </body>
 </html>
