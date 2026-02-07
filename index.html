@@ -3,181 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drive Multi-Upload</title>
+    <title>Super Meme Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; max-width: 600px; margin: 0 auto; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* Input Area */
-        .upload-box { border: 2px dashed #4285F4; padding: 20px; text-align: center; border-radius: 8px; background: #f8fbff; }
-        input[type="file"] { width: 100%; margin-bottom: 10px; }
-        
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; margin-top: 10px; transition: 0.2s; }
-        .btn-upload { background: #4285F4; }
-        .btn-upload:hover { background: #3367d6; }
-        .btn-refresh { background: #0F9D58; width: auto; padding: 8px 15px; font-size: 14px; float: right; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        :root {
+            --primary: #8e2de2;
+            --secondary: #4a00e0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+        }
 
-        /* Progress Log */
-        #logArea { margin-top: 15px; max-height: 150px; overflow-y: auto; font-size: 13px; border-top: 1px solid #eee; padding-top: 10px; display: none; }
-        .log-item { margin-bottom: 5px; padding: 5px; border-radius: 4px; }
-        .log-success { color: green; background: #e6fffa; }
-        .log-error { color: red; background: #ffe6e6; }
-        .log-waiting { color: #666; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-        /* File List */
-        .file-list { margin-top: 15px; }
-        .file-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
-        .file-name { font-weight: 500; font-size: 14px; max-width: 70%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .btn-down { background: #eee; color: #333; padding: 5px 12px; border-radius: 15px; text-decoration: none; font-size: 12px; font-weight: bold; }
-        .btn-down:hover { background: #ddd; color: black; }
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- UI CHUNG & BACKGROUND --- */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: var(--primary); animation: float 10s infinite alternate; }
+        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #ff0055; animation: float 8s infinite alternate-reverse; }
+
+        @keyframes float { from { transform: translate(0,0); } to { transform: translate(30px, 50px); } }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- HEADER & TABS --- */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: -webkit-linear-gradient(#fff, #a6a6a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: inline-flex;
+            background: rgba(0,0,0,0.3);
+            padding: 5px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            background: transparent;
+            color: #aaa;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(142, 45, 226, 0.4);
+        }
+
+        /* --- CONTENT SECTIONS --- */
+        .section { display: none; animation: fadeIn 0.5s ease; }
+        .section.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MODE 1: SINGLE MEME --- */
+        .single-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .meme-frame {
+            height: 400px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meme-frame img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+
+        /* --- MODE 2: GALLERY LIST --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.05);
+            aspect-ratio: 1/1; /* Vuông */
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            z-index: 2;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 10px;
+            opacity: 0;
+            transition: 0.3s;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .gallery-item:hover .gallery-overlay { opacity: 1; }
+
+        /* --- BUTTONS & LOADER --- */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            color: white;
+        }
+
+        .btn-primary { background: linear-gradient(90deg, #8e2de2, #4a00e0); }
+        .btn-danger { background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.5); }
+        .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        
+        .btn:hover { filter: brightness(1.2); transform: scale(1.05); }
+
+        .loader {
+            width: 30px; height: 30px;
+            border: 3px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- LIGHTBOX (Xem ảnh to) --- */
+        .lightbox {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(142, 45, 226, 0.3);
+        }
+        .close-lb {
+            position: absolute;
+            top: 20px; right: 30px;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
 
-    <h2>📁 Upload-Drive</h2>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
 
-    <div class="card">
-        <div class="upload-box">
-            <input type="file" id="fileInput" multiple>
-            <button class="btn-upload" id="uploadBtn" onclick="handleBatchUpload()">⬆️ Tải Tất Cả Lên</button>
+    <div class="container">
+        <header>
+            <h1>Meme Universe</h1>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('single')">Random 1 Ảnh</button>
+                <button class="tab-btn" onclick="switchTab('list')">Kho Ảnh (List)</button>
+            </div>
+        </header>
+
+        <div id="single-section" class="section active">
+            <div class="single-card">
+                <div class="meme-frame">
+                    <div class="loader" id="single-loader"></div>
+                    <img id="single-img" src="" alt="Meme" style="display:none">
+                </div>
+                <div style="display: flex; justify-content: center; gap: 15px;">
+                    <button class="btn btn-outline" onclick="downloadCurrent()">
+                        <i class="fa-solid fa-download"></i> Tải về
+                    </button>
+                    <button class="btn btn-primary" onclick="loadSingleMeme()">
+                        <i class="fa-solid fa-shuffle"></i> Ảnh khác
+                    </button>
+                </div>
+            </div>
         </div>
-        <div id="logArea"></div>
+
+        <div id="list-section" class="section">
+            <div class="controls">
+                <div>
+                    <span style="font-size: 0.9rem; opacity: 0.8;">Đã tải: <b id="count-display">0</b> ảnh</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-danger" onclick="resetGallery()">
+                        <i class="fa-solid fa-trash"></i> Xóa & Làm mới
+                    </button>
+                    <button class="btn btn-primary" onclick="loadBatchMemes(20)">
+                        <i class="fa-solid fa-plus"></i> Tải thêm 20 ảnh
+                    </button>
+                </div>
+            </div>
+
+            <div class="gallery-grid" id="gallery-grid">
+                </div>
+            <div class="loader" id="list-loader"></div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                 <button class="btn btn-outline" onclick="loadBatchMemes(50)">
+                    Load mạnh tay (50 ảnh)
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <div style="overflow: hidden; margin-bottom: 10px;">
-            <strong style="float:left; line-height: 35px;">Danh sách file</strong>
-            <button onclick="loadFiles()" class="btn-refresh">🔄 Làm mới</button>
-        </div>
-        <div id="fileList" class="file-list">Đang tải danh sách...</div>
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <span class="close-lb">&times;</span>
+        <img id="lb-img" src="">
     </div>
 
     <script>
-        // === CẤU HÌNH (DÁN LINK WEB APP CỦA BẠN VÀO ĐÂY) ===
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCJ3XXDvu6gnt2SJ5Ji9H5cbtUVSHA0JwmvjPn-BZU6vXCUD7_9kj1RhWGY7Ghi8qVaQ/exec";
-        // ====================================================
-
-        // Hàm xử lý upload nhiều file
-        async function handleBatchUpload() {
-            const fileInput = document.getElementById('fileInput');
-            const btn = document.getElementById('uploadBtn');
-            const logArea = document.getElementById('logArea');
-            
-            const files = fileInput.files;
-            if(files.length === 0) {
-                alert("Bạn chưa chọn file nào!");
-                return;
-            }
-
-            // Reset giao diện
-            btn.disabled = true;
-            logArea.style.display = 'block';
-            logArea.innerHTML = `<div class="log-waiting">⏳ Đang chuẩn bị tải ${files.length} file...</div>`;
-
-            // Duyệt qua từng file và upload lần lượt (Tuần tự)
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                
-                // Cập nhật trạng thái nút bấm
-                btn.innerText = `Đang tải (${i+1}/${files.length})...`;
-                
-                // In log đang tải
-                logArea.innerHTML += `<div id="log-${i}" class="log-waiting">➤ Đang tải: ${file.name}...</div>`;
-                scrollToBottom(logArea);
-
-                try {
-                    // Gọi hàm upload từng file và đợi nó xong mới qua file tiếp theo
-                    await uploadSingleFile(file);
-                    
-                    // Update log thành công
-                    document.getElementById(`log-${i}`).innerHTML = `✅ Đã xong: ${file.name}`;
-                    document.getElementById(`log-${i}`).className = "log-item log-success";
-                } catch (error) {
-                    // Update log lỗi
-                    document.getElementById(`log-${i}`).innerHTML = `❌ Lỗi: ${file.name} (${error})`;
-                    document.getElementById(`log-${i}`).className = "log-item log-error";
-                }
-            }
-
-            // Hoàn tất
-            btn.disabled = false;
-            btn.innerText = "⬆️ Tải Tất Cả Lên";
-            logArea.innerHTML += `<div style="font-weight:bold; margin-top:10px">🎉 Hoàn tất quá trình!</div>`;
-            scrollToBottom(logArea);
-            
-            fileInput.value = ""; // Xóa file đã chọn
-            loadFiles(); // Tải lại danh sách
-        }
-
-        // Hàm con: Upload 1 file duy nhất (Trả về Promise)
-        function uploadSingleFile(file) {
-            return new Promise((resolve, reject) => {
-                if(file.size > 50 * 1024 * 1024) {
-                    reject("File quá lớn > 50MB");
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function() {
-                    const base64 = reader.result.split(',')[1];
-                    
-                    fetch(SCRIPT_URL, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            base64: base64,
-                            mimeType: file.type,
-                            filename: file.name
-                        })
-                    })
-                    .then(r => r.json())
-                    .then(res => {
-                        if(res.status === "success") resolve();
-                        else reject(res.message);
-                    })
-                    .catch(err => reject("Lỗi mạng"));
-                };
-                reader.onerror = () => reject("Lỗi đọc file");
-            });
-        }
-
-        // Hàm tải danh sách (giữ nguyên)
-        function loadFiles() {
-            const listDiv = document.getElementById('fileList');
-            listDiv.innerHTML = '<div style="text-align:center">⏳ Đang cập nhật...</div>';
-            
-            fetch(SCRIPT_URL + "?action=list")
-            .then(r => r.json())
-            .then(files => {
-                if(!files || files.length === 0) {
-                    listDiv.innerHTML = "<div style='text-align:center;color:#888'>Thư mục trống</div>";
-                    return;
-                }
-                let html = "";
-                files.forEach(f => {
-                    let date = new Date(f.date).toLocaleDateString('vi-VN');
-                    html += `
-                        <div class="file-item">
-                            <div class="file-info">
-                                <div class="file-name" title="${f.name}">${f.name}</div>
-                                <div style="font-size:11px; color:#888">${f.size} • ${date}</div>
-                            </div>
-                            <a href="${f.link}" class="btn-down">⬇ Tải</a>
-                        </div>
-                    `;
-                });
-                listDiv.innerHTML = html;
-            })
-            .catch(err => listDiv.innerHTML = "Lỗi tải danh sách.");
-        }
+        // --- CẤU HÌNH API ---
+        // Sử dụng API hỗ trợ lấy nhiều ảnh 1 lúc để demo cho mượt (meme-api.com)
+        // Nếu dùng API phimtat.vn (thường chỉ trả về 1 ảnh), code bên dưới đã hỗ trợ loop.
+        const API_URL = "https://meme-api.com/gimme"; 
         
-        function scrollToBottom(el) { el.scrollTop = el.scrollHeight; }
+        // --- QUẢN LÝ DỮ LIỆU ---
+        let seenUrls = new Set(); // Bộ nhớ chứa các link đã tải để tránh trùng
 
-        // Tự chạy khi vào
-        loadFiles();
+        // 1. CHỨC NĂNG TAB
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            
+            if(tabName === 'single') {
+                document.querySelector('button[onclick="switchTab(\'single\')"]').classList.add('active');
+                document.getElementById('single-section').classList.add('active');
+            } else {
+                document.querySelector('button[onclick="switchTab(\'list\')"]').classList.add('active');
+                document.getElementById('list-section').classList.add('active');
+                // Nếu list trống thì tự tải lần đầu
+                if(document.getElementById('gallery-grid').children.length === 0) {
+                    loadBatchMemes(20);
+                }
+            }
+        }
+
+        // 2. LOGIC SINGLE MEME
+        async function loadSingleMeme() {
+            const loader = document.getElementById('single-loader');
+            const img = document.getElementById('single-img');
+            
+            loader.style.display = 'block';
+            img.style.display = 'none';
+
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                // data.url cho meme-api.com. Nếu dùng phimtat, hãy kiểm tra console log
+                const url = data.url; 
+
+                img.src = url;
+                img.onload = () => {
+                    loader.style.display = 'none';
+                    img.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+                loader.style.display = 'none';
+            }
+        }
+
+        function downloadCurrent() {
+            const src = document.getElementById('single-img').src;
+            if(src) window.open(src, '_blank');
+        }
+
+        // 3. LOGIC GALLERY (LIST 1000 ẢNH)
+        async function loadBatchMemes(count) {
+            const loader = document.getElementById('list-loader');
+            const grid = document.getElementById('gallery-grid');
+            
+            loader.style.display = 'block';
+
+            // Cách xử lý thông minh: 
+            // Nếu API hỗ trợ lấy số lượng (ví dụ /gimme/50) thì gọi 1 lần.
+            // Nếu API chỉ trả 1 ảnh (như phimtat), ta dùng vòng lặp Promise.
+            
+            // Dưới đây là mô phỏng vòng lặp để phù hợp với yêu cầu "lấy từ API 1 ảnh" của bạn
+            // nhưng chạy song song để nhanh hơn.
+            
+            let promises = [];
+            for(let i = 0; i < count; i++) {
+                promises.push(fetch(API_URL).then(res => res.json()));
+            }
+
+            try {
+                const results = await Promise.all(promises);
+                
+                results.forEach(data => {
+                    // Kiểm tra trùng lặp
+                    if (!seenUrls.has(data.url)) {
+                        seenUrls.add(data.url); // Đánh dấu đã xem
+                        createGalleryItem(data.url);
+                    }
+                });
+
+                updateCount();
+
+            } catch (e) {
+                console.error("Lỗi tải batch:", e);
+                alert("Mạng lag quá, tải được một ít thôi!");
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function createGalleryItem(url) {
+            const grid = document.getElementById('gallery-grid');
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                <img src="${url}" loading="lazy" alt="Meme">
+                <div class="gallery-overlay">
+                    <button class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+            `;
+            // Sự kiện click để xem to
+            div.onclick = () => openLightbox(url);
+            grid.appendChild(div);
+        }
+
+        function resetGallery() {
+            if(confirm("Bạn muốn xóa hết ảnh hiện tại và tải bộ mới?")) {
+                document.getElementById('gallery-grid').innerHTML = '';
+                // Không clear seenUrls nếu bạn muốn "không trùng với cái cũ vừa xóa"
+                // Nếu muốn reset hoàn toàn (có thể lặp lại cái cũ) thì: seenUrls.clear();
+                // Ở đây mình giữ seenUrls để đảm bảo độ "tươi mới"
+                loadBatchMemes(20);
+                updateCount();
+            }
+        }
+
+        function updateCount() {
+            document.getElementById('count-display').innerText = document.getElementById('gallery-grid').children.length;
+        }
+
+        // 4. LIGHTBOX
+        function openLightbox(url) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lb-img');
+            img.src = url;
+            lb.style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
+        // Khởi chạy ban đầu
+        loadSingleMeme();
     </script>
 </body>
 </html>
