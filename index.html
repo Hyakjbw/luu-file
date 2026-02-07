@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Meme Hub Ultimate Fixed</title>
+    <title>KHO MEME BY HUY</title></title>
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -294,25 +294,25 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Meme Random</h2>
-                    <span class="badge">V3.0 STABLE</span>
+                    <span class="badge" id="status-badge">DATABASE</span>
                 </div>
                 
                 <div class="img-container" id="img-frame">
                     <div class="spinner" id="loading-spinner"></div>
-                    <img id="main-image" alt="Meme Image" onerror="handleImgError()">
+                    <img id="main-image" referrerpolicy="no-referrer" alt="Meme Image" onerror="handleImgError()">
                 </div>
 
                 <div class="btn-group">
                     <button class="btn btn-primary" onclick="fetchNewMeme()">
                         <i class="fa-solid fa-arrows-rotate"></i> Ảnh Khác
                     </button>
-                    <!-- Nút này gọi hàm xử lý thông minh -->
-                    <button class="btn btn-secondary" onclick="handleDownload()" id="dl-btn">
+                    <!-- Nút này lấy từ Database -->
+                    <button class="btn btn-secondary" onclick="handleSmartDownload()" id="dl-btn">
                         <i class="fa-solid fa-cloud-arrow-down"></i> Tải / Lưu
                     </button>
                 </div>
-                <p style="margin-top: 15px; font-size: 12px; opacity: 0.6; color: #cbd5e1;">
-                    <i class="fa-solid fa-circle-info"></i> Ảnh sẽ được lưu vào thiết bị
+                <p id="info-text" style="margin-top: 15px; font-size: 12px; opacity: 0.6; color: #cbd5e1;">
+                    <i class="fa-solid fa-database"></i> Đã cache ảnh vào Database trình duyệt
                 </p>
             </div>
         </div>
@@ -345,18 +345,60 @@
     </div>
 
     <script>
-        // API Endpoint
+        // --- CẤU HÌNH DATABASE (INDEXEDDB) ---
+        const DB_NAME = "MemeHubDB";
+        const DB_STORE = "images";
+        let dbInstance = null;
+
+        const request = indexedDB.open(DB_NAME, 1);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) {
+                db.createObjectStore(DB_STORE, { keyPath: "id" });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            dbInstance = event.target.result;
+            console.log("Database Ready!");
+            fetchNewMeme(); 
+        };
+
+        request.onerror = (event) => {
+            console.error("Database Error:", event.target.error);
+            showToast("Lỗi DB. Sử dụng chế độ trực tiếp", true);
+        };
+
+        // --- CÁC HÀM XỬ LÝ DATABASE ---
+
+        function saveToDB(id, blob) {
+            if (!dbInstance) return;
+            const transaction = dbInstance.transaction([DB_STORE], "readwrite");
+            const store = transaction.objectStore(DB_STORE);
+            store.put({ id: id, blob: blob, timestamp: Date.now() });
+        }
+
+        function getFromDB(id, callback) {
+            if (!dbInstance) { callback(null); return; }
+            const transaction = dbInstance.transaction([DB_STORE], "readonly");
+            const store = transaction.objectStore(DB_STORE);
+            const request = store.get(id);
+            request.onsuccess = () => {
+                if (request.result) callback(request.result.blob);
+                else callback(null);
+            };
+            request.onerror = () => callback(null);
+        }
+
+        // --- LOGIC TẢI ẢNH MỚI ---
+
         const API_URL = "https://api.phimtat.vn/api/random-meme/";
-        // Proxy dự phòng nếu tải trực tiếp bị lỗi CORS
-        const PROXY_URL = "https://api.allorigins.win/raw?url=";
-
-        // State Management
-        let currentBlob = null; 
-        let currentUrl = ""; // Lưu URL hiện tại để fallback
+        // Sử dụng Proxy mạnh hơn Corsproxy.io
+        const PROXY_URL = "https://corsproxy.io/?"; 
+        
         let isFetching = false;
-        let isFallbackMode = false; // Đánh dấu nếu đang dùng chế độ fallback
-
-        // --- 1. CORE FUNCTIONS (XỬ LÝ LOGIC TẢI ẢNH SIÊU CẤP) ---
+        let isDirectMode = false; // Chế độ dự phòng khi Proxy lỗi
 
         async function fetchNewMeme() {
             if (isFetching) return;
@@ -364,116 +406,115 @@
 
             const img = document.getElementById('main-image');
             const spinner = document.getElementById('loading-spinner');
+            const badge = document.getElementById('status-badge');
+            const info = document.getElementById('info-text');
             
             // Reset UI
             img.classList.remove('loaded');
             img.style.opacity = 0;
             spinner.style.display = 'block';
-            currentBlob = null;
-            isFallbackMode = false;
-
-            // Tạo ID ngẫu nhiên để ép server trả về ảnh mới
-            const randomId = Math.floor(Math.random() * 999999);
+            
+            // Random ID để tránh cache
+            const randomId = Math.floor(Math.random() * 1000000);
             const targetUrl = API_URL + "?id=" + randomId;
-            currentUrl = targetUrl; // Lưu lại url
 
             try {
-                // Bước 1: Thử tải Blob trực tiếp
-                // Timeout 5s để không bắt người dùng đợi lâu
+                // TIMEOUT: Nếu Proxy load quá 5 giây thì hủy luôn
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-                const response = await fetch(targetUrl, { signal: controller.signal });
+                // Thử tải qua Proxy để lấy Blob
+                const response = await fetch(PROXY_URL + encodeURIComponent(targetUrl), {
+                    signal: controller.signal
+                });
                 clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error("Proxy Error");
 
-                if (!response.ok) throw new Error('Fetch failed');
+                const blob = await response.blob();
                 
-                currentBlob = await response.blob();
-                const objectURL = URL.createObjectURL(currentBlob);
+                // --- THÀNH CÔNG: LƯU DB ---
+                saveToDB("current_meme", blob);
                 
-                // Hiển thị ảnh từ Blob (Cách xịn nhất)
-                displayImage(objectURL);
+                const objectURL = URL.createObjectURL(blob);
+                img.onload = () => {
+                    spinner.style.display = 'none';
+                    img.classList.add('loaded');
+                    img.style.opacity = 1;
+                    isFetching = false;
+                };
+                img.src = objectURL;
+
+                // Cập nhật trạng thái
+                isDirectMode = false;
+                badge.innerText = "DATABASE";
+                badge.style.color = "var(--accent)";
+                info.innerHTML = `<i class="fa-solid fa-database"></i> Đã cache ảnh vào Database`;
 
             } catch (error) {
-                console.warn("Lỗi tải Blob (CORS/Timeout). Chuyển sang chế độ Fallback.", error);
+                // --- THẤT BẠI: CHUYỂN SANG CHẾ ĐỘ TRỰC TIẾP ---
+                console.warn("Chuyển sang Direct Mode:", error);
                 
-                // Bước 2: FALLBACK - Nếu lỗi tải file, ta gán URL trực tiếp
-                // Lúc này ảnh sẽ hiện, nhưng nút tải sẽ hoạt động ở chế độ cơ bản
-                isFallbackMode = true;
-                
-                // Thêm timestamp để ép trình duyệt load lại ảnh
-                const fallbackUrl = targetUrl + "&t=" + Date.now();
-                displayImage(fallbackUrl);
-            }
-        }
-
-        function displayImage(src) {
-            const img = document.getElementById('main-image');
-            const spinner = document.getElementById('loading-spinner');
-
-            img.onload = () => {
+                isDirectMode = true;
+                isFetching = false;
                 spinner.style.display = 'none';
+                
+                // Load trực tiếp từ URL (Bỏ qua Database)
+                img.src = targetUrl;
                 img.classList.add('loaded');
                 img.style.opacity = 1;
-                isFetching = false;
-            };
-            
-            // Nếu ảnh bị lỗi (404), gọi hàm xử lý lỗi
-            img.onerror = () => {
-                spinner.style.display = 'none';
-                isFetching = false;
-                handleImgError();
+
+                // Cập nhật trạng thái
+                badge.innerText = "DIRECT";
+                badge.style.color = "#ffbd2e"; // Màu vàng cảnh báo
+                info.innerHTML = `<i class="fa-solid fa-globe"></i> Chế độ trực tiếp (Server bận)`;
             }
-
-            img.src = src;
         }
 
-        function handleImgError() {
-            const img = document.getElementById('main-image');
-            // Nếu API phimtat lỗi hẳn, dùng ảnh mẫu để demo giao diện
-            img.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDNqMGFxODZ4bmJxeXljdmN4YnZ4bmJxeXljdmN4YnZ4bmJxeXljdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif"; 
-            showToast("Server bận, đang hiện ảnh mẫu...", true);
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('main-image').classList.add('loaded');
-            document.getElementById('main-image').style.opacity = 1;
+        // --- XỬ LÝ NÚT TẢI THÔNG MINH ---
+
+        function handleSmartDownload() {
+            if (isDirectMode) {
+                // Nếu đang ở chế độ Direct (không có Blob trong DB) -> Mở Tab mới
+                const img = document.getElementById('main-image');
+                showToast("Đang mở ảnh gốc...", false);
+                window.open(img.src, '_blank');
+            } else {
+                // Nếu có Blob trong DB -> Tải xịn
+                downloadFromDB();
+            }
         }
 
-        // --- XỬ LÝ NÚT TẢI VỀ ---
-        async function handleDownload(inputBlob = null) {
-            const blobToUse = inputBlob || currentBlob;
-
-            // CASE 1: Có Blob xịn (Đã tải thành công vào bộ nhớ)
-            if (blobToUse) {
-                const fileName = `meme-${Date.now()}.jpg`;
-                const file = new File([blobToUse], fileName, { type: blobToUse.type });
-
-                // Ưu tiên Web Share API trên Mobile
-                if (navigator.share && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'Meme Hub',
-                            text: 'Tải meme này về ngay!'
-                        });
-                    } catch (err) {
-                        // Nếu user hủy share, không làm gì cả
-                        console.log("User closed share sheet");
-                    }
+        function downloadFromDB() {
+            getFromDB("current_meme", (blob) => {
+                if (blob) {
+                    processDownload(blob);
                 } else {
-                    // Trên PC thì tải xuống
-                    downloadBlobDirectly(blobToUse, fileName);
+                    // Fallback nếu DB lỗi
+                    showToast("Dữ liệu lỗi, mở tab mới...", true);
+                    window.open(document.getElementById('main-image').src, '_blank');
                 }
-            } 
-            // CASE 2: Fallback (Không lấy được Blob do CORS)
-            else if (isFallbackMode || !blobToUse) {
-                // Vì không có Blob, ta không thể dùng Share API
-                // Ta sẽ mở ảnh ở tab mới, đây là cách duy nhất khi bị chặn CORS
-                showToast("Đang mở tab tải ảnh...", false);
-                window.open(document.getElementById('main-image').src, '_blank');
+            });
+        }
+
+        async function processDownload(blob) {
+            const fileName = `meme-${Date.now()}.jpg`;
+            const file = new File([blob], fileName, { type: blob.type });
+
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Meme Hub',
+                        text: 'Meme cực chất!'
+                    });
+                } catch (err) {}
+            } else {
+                directDownload(blob, fileName);
             }
         }
 
-        function downloadBlobDirectly(blob, fileName) {
+        function directDownload(blob, fileName) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.style.display = 'none';
@@ -484,11 +525,21 @@
             setTimeout(() => {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                showToast("Đã lưu ảnh!");
+                showToast("Đã lưu vào máy!");
             }, 100);
         }
 
-        // --- 2. GALLERY LOGIC (Cũng áp dụng Fallback) ---
+        function handleImgError() {
+            const img = document.getElementById('main-image');
+            // Ảnh lỗi cuối cùng khi cả direct cũng chết
+            img.src = "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDNqMGFxODZ4bmJxeXljdmN4YnZ4bmJxeXljdmN4YnZ4bmJxeXljdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbnUQpnihPSIgIXuZv/giphy.gif"; 
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('main-image').classList.add('loaded');
+            document.getElementById('main-image').style.opacity = 1;
+            showToast("Server mất kết nối hoàn toàn.", true);
+        }
+
+        // --- GALLERY LOGIC (Cũng có fallback) ---
 
         async function appendGallery(count = 8) {
             const grid = document.getElementById('gallery-grid');
@@ -496,55 +547,57 @@
             for(let i=0; i<count; i++) {
                 const item = document.createElement('div');
                 item.className = 'grid-item';
-                // Placeholder
                 item.innerHTML = `<div class="spinner" style="position:relative; margin:auto; top:40%;"></div>`;
                 grid.appendChild(item);
-
-                // Load từng ảnh
-                processGalleryItem(item);
+                
+                fetchGalleryItem(item);
             }
         }
 
-        async function processGalleryItem(container) {
-            const randomId = Math.floor(Math.random() * 1000000);
-            const url = API_URL + "?id=" + randomId;
+        async function fetchGalleryItem(container) {
+            const randomId = Math.random().toString(36).substring(7);
+            const apiUrl = API_URL + "?id=" + Math.random();
 
             try {
-                // Thử tải Blob cho gallery
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("Network err");
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 4000); // 4s timeout
+
+                const res = await fetch(PROXY_URL + encodeURIComponent(apiUrl), { signal: controller.signal });
+                clearTimeout(id);
+
+                if(!res.ok) throw new Error();
                 
                 const blob = await res.blob();
-                const objectUrl = URL.createObjectURL(blob);
+                saveToDB(randomId, blob);
+                const url = URL.createObjectURL(blob);
                 
-                renderGalleryHTML(container, objectUrl, blob);
+                container.innerHTML = `
+                    <img src="${url}" loading="lazy" alt="Meme">
+                    <div class="download-hint"><i class="fa-solid fa-download"></i><span>Lưu</span></div>
+                `;
+                
+                container.onclick = () => {
+                    getFromDB(randomId, (savedBlob) => {
+                        if(savedBlob) processDownload(savedBlob);
+                    });
+                };
 
             } catch (e) {
-                // Fallback Gallery: Nếu lỗi, gán src trực tiếp
-                // Lưu ý: Gallery ở chế độ này khi ấn tải sẽ mở tab mới
-                renderGalleryHTML(container, url, null);
+                // Fallback Gallery: Load trực tiếp (Ấn vào mở tab mới)
+                container.innerHTML = `
+                    <img src="${apiUrl}" loading="lazy" alt="Meme">
+                    <div class="download-hint"><i class="fa-solid fa-external-link-alt"></i><span>Mở</span></div>
+                `;
+                container.onclick = () => window.open(apiUrl, '_blank');
             }
-        }
-
-        function renderGalleryHTML(container, imgSrc, blob) {
-            container.innerHTML = `
-                <img src="${imgSrc}" loading="lazy" alt="Meme">
-                <div class="download-hint">
-                    <i class="fa-solid fa-download"></i>
-                    <span>${blob ? "Lưu Ngay" : "Mở Ảnh"}</span>
-                </div>
-            `;
-            
-            container.onclick = () => handleDownload(blob);
         }
 
         function loadGallery() {
-            const grid = document.getElementById('gallery-grid');
-            grid.innerHTML = '';
+            document.getElementById('gallery-grid').innerHTML = '';
             appendGallery(12);
         }
 
-        // --- 3. UI UTILITIES ---
+        // --- UI UTILS ---
 
         function switchView(viewName) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -572,11 +625,6 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
-
-        // --- INIT ---
-        window.onload = () => {
-            fetchNewMeme();
-        };
 
     </script>
 </body>
